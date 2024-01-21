@@ -34,6 +34,8 @@ def main():
 
 
 def get_args_parser():
+    SITE_NAME = os.environ.get('SITE_NAME')
+    cprint(SITE_NAME)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-j",
@@ -57,7 +59,7 @@ def get_args_parser():
         action="store",
         type=str,
         help="Site name, should end with .localhost, default: development.localhost",  # noqa: E501
-        default= $SITE_NAME,
+        default= f"{SITE_NAME}",
     )
     parser.add_argument(
         "-r",
@@ -117,6 +119,9 @@ def get_args_parser():
 
 
 def init_bench_if_not_exist(args):
+    
+    REDIS_CACHE_CONTAINER_NAME = os.environ.get('REDIS_CACHE_CONTAINER_NAME')
+    REDIS_QUEUE_CONTAINER_NAME = os.environ.get('REDIS_QUEUE_CONTAINER_NAME')
     if os.path.exists(args.bench_name):
         cprint("Bench already exists. Only site will be created", level=3)
         return
@@ -152,30 +157,30 @@ def init_bench_if_not_exist(args):
                 cwd=os.path.join(os.getcwd(), args.bench_name),
             )
 
-        cprint("Set redis_cache to redis://redis-cache:6379", level=3)
+        cprint(f"Set redis_cache to redis://{REDIS_CACHE_CONTAINER_NAME}:6379", level=3)
         subprocess.call(
             [
                 "bench",
                 "set-config",
                 "-g",
                 "redis_cache",
-                f"redis://{$REDIS_CACHE_CONTAINER_NAME}:6379",
+                f"redis://{REDIS_CACHE_CONTAINER_NAME}:6379",
             ],
             cwd=os.getcwd() + "/" + args.bench_name,
         )
-        cprint("Set redis_queue to redis://redis-queue:6379", level=3)
+        cprint(f"Set redis_queue to redis://{REDIS_QUEUE_CONTAINER_NAME}:6379", level=3)
         subprocess.call(
             [
                 "bench",
                 "set-config",
                 "-g",
                 "redis_queue",
-                f"redis://{$REDIS_QUEUE_CONTAINER_NAME}:6379",
+                f"redis://{REDIS_QUEUE_CONTAINER_NAME}:6379",
             ],
             cwd=os.getcwd() + "/" + args.bench_name,
         )
         cprint(
-            "Set redis_socketio to redis://redis-queue:6379 for backward compatibility",  # noqa: E501
+            f"Set redis_socketio to redis://{REDIS_QUEUE_CONTAINER_NAME}:6379 for backward compatibility",  # noqa: E501
             level=3,
         )
         subprocess.call(
@@ -184,7 +189,7 @@ def init_bench_if_not_exist(args):
                 "set-config",
                 "-g",
                 "redis_socketio",
-                f"redis://{$REDIS_CACHE_CONTAINER_NAME}:6379",
+                f"redis://{REDIS_QUEUE_CONTAINER_NAME}:6379",
             ],
             cwd=os.getcwd() + "/" + args.bench_name,
         )
@@ -198,6 +203,7 @@ def init_bench_if_not_exist(args):
 
 
 def create_site_in_bench(args):
+    DATABASE_PASSWORD = os.environ.get('DATABASE_PASSWORD')
     if "mariadb" == args.db_type:
         cprint("Set db_host", level=3)
         subprocess.call(
@@ -210,7 +216,7 @@ def create_site_in_bench(args):
             f"--db-host=mariadb",  # Should match the compose service name
             f"--db-type={args.db_type}",  # Add the selected database type
             f"--no-mariadb-socket",
-            f"--db-root-password={$DATABASE_PASSWORD}",  # Replace with your MariaDB password
+            f"--db-root-password={DATABASE_PASSWORD}",  # Replace with your MariaDB password
             f"--admin-password={args.admin_password}",
         ]
     else:
@@ -224,7 +230,7 @@ def create_site_in_bench(args):
             "new-site",
             f"--db-host=postgresql",  # Should match the compose service name
             f"--db-type={args.db_type}",  # Add the selected database type
-            f"--db-root-password={$DATABASE_PASSWORD}",  # Replace with your PostgreSQL password
+            f"--db-root-password={DATABASE_PASSWORD}",  # Replace with your PostgreSQL password
             f"--admin-password={args.admin_password}",
         ]
     apps = os.listdir(f"{os.getcwd()}/{args.bench_name}/apps")
