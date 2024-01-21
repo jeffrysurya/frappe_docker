@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   mariadb:
-    container_name: "{MARIADB_CONTAINER_NAME}"
+    container_name: "${MARIADB_CONTAINER_NAME}"
     image: docker.io/mariadb:10.6
     command:
       - --character-set-server=utf8mb4
@@ -9,45 +9,45 @@ services:
       - --skip-character-set-client-handshake
       - --skip-innodb-read-only-compressed # Temporary fix for MariaDB 10.6
     environment:
-      MYSQL_ROOT_PASSWORD: {DATABASE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: "${DATABASE_PASSWORD}"
     volumes:
       - mariadb-data:/var/lib/mysql
 
   # Enable PostgreSQL only if you use it, see development/README.md for more information.
   postgresql:
-    container_name: "{POSTGRESQL_CONTAINER_NAME}"
+    container_name: "${POSTGRESQL_CONTAINER_NAME}"
     image: postgres:11.8
     environment:
-      POSTGRES_PASSWORD: {DATABASE_PASSWORD}
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
     volumes:
       - postgresql-data:/var/lib/postgresql/data
 
   # Enable Mailpit if you need to test outgoing mail services
   # See https://mailpit.axllent.org/
-   mailpit:
-     container_name: "{MAILPIT_CONTAINER_NAME}"
-     image: axllent/mailpit
-     volumes:
-       - mailpit-data:/data
-     ports:
-       - 8025:8025
-       - 1025:1025
-     environment:
-       MP_MAX_MESSAGES: 5000
-       MP_DATA_FILE: /data/mailpit.db
-       MP_SMTP_AUTH_ACCEPT_ANY: 1
-       MP_SMTP_AUTH_ALLOW_INSECURE: 1
+  mailpit:
+    container_name: "${MAILPIT_CONTAINER_NAME}"
+    image: axllent/mailpit
+    volumes:
+      - mailpit-data:/data
+    ports:
+      - 8025:8025
+      - 1025:1025
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATA_FILE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   redis-cache:
-    container_name: "{REDIS_CACHE_CONTAINER_NAME}"
+    container_name: "${REDIS_CACHE_CONTAINER_NAME}"
     image: docker.io/redis:alpine
 
   redis-queue:
-    container_name: "{REDIS_QUEUE_CONTAINER_NAME}"
+    container_name: "${REDIS_QUEUE_CONTAINER_NAME}"
     image: docker.io/redis:alpine
 
   frappe:
-    container_name: "{FRAPPE_CONTAINER_NAME}"
+    container_name: "${FRAPPE_CONTAINER_NAME}"
     image: docker.io/frappe/bench:latest
     command: sleep infinity
     environment:
