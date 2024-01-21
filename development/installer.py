@@ -57,7 +57,7 @@ def get_args_parser():
         action="store",
         type=str,
         help="Site name, should end with .localhost, default: development.localhost",  # noqa: E501
-        default="development.localhost",
+        default= $SITE_NAME,
     )
     parser.add_argument(
         "-r",
@@ -111,7 +111,7 @@ def get_args_parser():
         action="store",
         type=str,
         help="Database type to use (e.g., mariadb or postgres)",
-        default="mariadb",  # Set your default database type here
+        default="postgres",  # Set your default database type here
     )
     return parser
 
@@ -159,7 +159,7 @@ def init_bench_if_not_exist(args):
                 "set-config",
                 "-g",
                 "redis_cache",
-                "redis://redis-cache:6379",
+                f"redis://{$REDIS_CACHE_CONTAINER_NAME}:6379",
             ],
             cwd=os.getcwd() + "/" + args.bench_name,
         )
@@ -170,7 +170,7 @@ def init_bench_if_not_exist(args):
                 "set-config",
                 "-g",
                 "redis_queue",
-                "redis://redis-queue:6379",
+                f"redis://{$REDIS_QUEUE_CONTAINER_NAME}:6379",
             ],
             cwd=os.getcwd() + "/" + args.bench_name,
         )
@@ -184,7 +184,7 @@ def init_bench_if_not_exist(args):
                 "set-config",
                 "-g",
                 "redis_socketio",
-                "redis://redis-queue:6379",
+                f"redis://{$REDIS_CACHE_CONTAINER_NAME}:6379",
             ],
             cwd=os.getcwd() + "/" + args.bench_name,
         )
@@ -210,7 +210,7 @@ def create_site_in_bench(args):
             f"--db-host=mariadb",  # Should match the compose service name
             f"--db-type={args.db_type}",  # Add the selected database type
             f"--no-mariadb-socket",
-            f"--db-root-password=123",  # Replace with your MariaDB password
+            f"--db-root-password={$DATABASE_PASSWORD}",  # Replace with your MariaDB password
             f"--admin-password={args.admin_password}",
         ]
     else:
@@ -224,7 +224,7 @@ def create_site_in_bench(args):
             "new-site",
             f"--db-host=postgresql",  # Should match the compose service name
             f"--db-type={args.db_type}",  # Add the selected database type
-            f"--db-root-password=123",  # Replace with your PostgreSQL password
+            f"--db-root-password={$DATABASE_PASSWORD}",  # Replace with your PostgreSQL password
             f"--admin-password={args.admin_password}",
         ]
     apps = os.listdir(f"{os.getcwd()}/{args.bench_name}/apps")
