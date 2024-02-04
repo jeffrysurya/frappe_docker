@@ -1,0 +1,13 @@
+volumes:
+  data:
+services:
+  mariadb:
+    container_name: ${DOCKER_NAME}
+    image: mariadb:latest
+    restart: always
+    environment:
+          MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes:
+      - data:/var/lib/mysql
+    ports:
+      - 3306:3306
