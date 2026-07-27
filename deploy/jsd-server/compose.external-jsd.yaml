@@ -1,0 +1,35 @@
+services:
+  backend:
+    networks:
+      - default
+      - mariadb-prod_dbnet
+      - redis_default
+
+  queue-short:
+    networks:
+      - default
+      - mariadb-prod_dbnet
+      - redis_default
+
+  queue-long:
+    networks:
+      - default
+      - mariadb-prod_dbnet
+      - redis_default
+
+  scheduler:
+    networks:
+      - default
+      - mariadb-prod_dbnet
+      - redis_default
+
+  websocket:
+    networks:
+      - default
+      - redis_default
+
+networks:
+  mariadb-prod_dbnet:
+    external: true
+  redis_default:
+    external: true
