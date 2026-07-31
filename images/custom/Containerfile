@@ -19,6 +19,7 @@ RUN useradd -ms /bin/bash frappe \
     && apt-get install --no-install-recommends -y \
     curl \
     git \
+    openssh-client \
     vim \
     nginx \
     gettext-base \
@@ -100,6 +101,9 @@ RUN apt-get update \
     librsvg2-dev \
     # For psycopg2
     libpq-dev \
+    # For lxml (frappe/lms)
+    libxml2-dev \
+    libxslt1-dev \
     # Other
     libffi-dev \
     liblcms2-dev \
@@ -125,7 +129,15 @@ ARG FRAPPE_BRANCH=version-16
 ARG FRAPPE_PATH=https://github.com/frappe/frappe
 ARG CACHE_BUST=""
 
-RUN --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1000 \
+RUN mkdir -p /home/frappe/.ssh \
+  && ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> /home/frappe/.ssh/known_hosts \
+  && chmod 700 /home/frappe/.ssh \
+  && chmod 644 /home/frappe/.ssh/known_hosts
+
+# --mount=type=ssh forwards the private key passed via `docker build --ssh default=<path>`,
+# used for cloning private custom apps over git@github.com:... urls in apps.json
+RUN --mount=type=ssh,uid=1000,gid=1000 \
+    --mount=type=secret,id=apps_json,target=/opt/frappe/apps.json,uid=1000,gid=1000 \
   : "${CACHE_BUST}" && \
   export APP_INSTALL_ARGS="" && \
   if [ -f /opt/frappe/apps.json ] && [ -s /opt/frappe/apps.json ]; then \
