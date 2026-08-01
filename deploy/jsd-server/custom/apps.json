@@ -1,5 +1,5 @@
 [
   { "url": "https://github.com/frappe/erpnext", "branch": "version-16" },
-  { "url": "git@github.com:TODO-ORG/custom-procurement-app.git", "branch": "main" },
-  { "url": "git@github.com:TODO-ORG/custom-hrms.git", "branch": "main" }
+  { "url": "git@github.com:MGM-CLUB/procurement.git", "branch": "main" },
+  { "url": "git@github.com:MGM-CLUB/HRMS.git", "branch": "main" }
 ]
