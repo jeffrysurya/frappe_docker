@@ -1,5 +1,6 @@
 [
   { "url": "https://github.com/frappe/erpnext", "branch": "version-16" },
+  { "url": "https://github.com/frappe/hrms", "branch": "version-16" },
   { "url": "git@github.com:MGM-CLUB/procurement.git", "branch": "main" },
   { "url": "git@github.com:MGM-CLUB/HRMS.git", "branch": "main" }
 ]
