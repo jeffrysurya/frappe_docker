@@ -1,0 +1,6 @@
+[
+  { "url": "https://github.com/frappe/erpnext", "branch": "version-16" },
+  { "url": "https://github.com/frappe/payments", "branch": "version-16" },
+  { "url": "https://github.com/frappe/webshop", "branch": "develop" },
+  { "url": "https://github.com/frappe/blog", "branch": "develop" }
+]
