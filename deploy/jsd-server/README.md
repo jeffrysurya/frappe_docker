@@ -1,6 +1,6 @@
 # jsd-server deployments
 
-Three stacks on this host, all built from `images/custom/Containerfile` with their own
+Four stacks on this host, all built from `images/custom/Containerfile` with their own
 `apps.json`, using external MariaDB (`mariadb-prod`) and Redis (`redis-cache` /
 `redis-queue` containers on the shared `mariadb-prod_dbnet` / `redis_default` networks).
 
@@ -9,14 +9,29 @@ Three stacks on this host, all built from `images/custom/Containerfile` with the
 | vanilla | `jsd-vanilla` | `jsd-vanilla-erpnext:16-crmlms` | `vanilla.whatthefrappe.id` (port 8091) | frappe, erpnext, hrms, payments, crm, lms, telephony, helpdesk, wiki, education, healthcare (marley), kamra, posawesome, insights, lending, raven |
 | custom  | `jsd-custom`  | `jsd-custom-erpnext:16`         | (see `custom/`) | |
 | shop | `jsd-shop` | `jsd-shop-erpnext:16` | `webshop.tataidekreatif.biz.id` (port 8093) | frappe, erpnext, payments, webshop, blog |
+| commera | `jsd-commera` | `jsd-commera-erpnext:16` | `commera.tataidekreatif.biz.id` (port 8094) | frappe, erpnext, bwh_payments, bwh_shipping, commera |
+
+`commera` ([bwhtech/commera](https://github.com/bwhtech/commera)) turns ERPNext into an
+online shop; its bilingual Jinja/Alpine/Tailwind storefront and Vue 3 merchant dashboard both
+ship inside the `commera` app itself (built by `bench build` during the image build) and are
+served by the same `frontend` nginx service every stack already has — **no separate frontend
+stack**, unlike the standalone `webshop-frontend` project used for `shop`. `commera`'s
+`hooks.py` deliberately omits `frappe/payments` from `required_apps`: its companion
+`bwh_payments` ships its own Payment Gateway Profile / base class instead. Install/apps.json
+order matters here because of the `required_apps` chain: `erpnext` → `bwh_payments` (no
+deps) → `bwh_shipping` (needs `erpnext`) → `commera` (needs all three). `erpnext` tracks
+`version-16` and `commera` is pinned to its `v16-beta.1` release tag; `bwh_payments`/
+`bwh_shipping` only have `develop`/`main` upstream, so they track `develop` (same situation
+as `insights`/`telephony`/`wiki` in the `vanilla` stack); `commera`'s `pyproject.toml` pins
+`frappe>=16,<17` so this is a v16 deployment.
 
 Stack/folder/project/image are still named "shop" (matches the existing custom/espresso
 naming precedent, where the folder name doesn't have to equal the site's FQDN) but the
 actual site is `webshop.tataidekreatif.biz.id`.
 
-`shop` uses MariaDB/Redis DB index 5/6 (vanilla uses 3/4, custom uses 1/2, the native
-non-Docker bench uses db 0). Its DB user is `%`-host scoped (not pinned to a container
-IP) so it survives `--force-recreate`/rebuilds — see "Gotcha" note below.
+`shop` uses MariaDB/Redis DB index 5/6, `commera` uses 7/8 (vanilla uses 3/4, custom uses
+1/2, the native non-Docker bench uses db 0). Its DB user is `%`-host scoped (not pinned to a
+container IP) so it survives `--force-recreate`/rebuilds — see "Gotcha" note below.
 
 There is no separate blog site/stack: blogging lives on the `webshop.tataidekreatif.biz.id`
 site itself via the `frappe/blog` app (**not** core Frappe's old Blog Post doctype —
@@ -50,14 +65,26 @@ Anything else does **not**:
 
 ## Update an app / all apps
 
-Always `--no-cache`, on purpose, every time you rebuild — this is production, and
-a hash-of-`apps.json` cache-bust (tried and reverted 2026-09-14, see Notes) cannot
-tell "app code updated upstream on the same branch" apart from "nothing changed",
-so it would silently skip re-cloning updated app code. `--no-cache` guarantees
-what's running is exactly what's in each app's configured branch HEAD at build
-time, at the cost of ~5-10 min per rebuild. Any repo/module update — including
-active development on a custom app — means a full `--no-cache` rebuild, no
-shortcut.
+Use `deploy/jsd-server/build.sh <stack>`, not a hand-written `docker build --no-cache`.
+It resolves the **current upstream commit** of frappe + every app in `<stack>/apps.json`
+with `git ls-remote`, writes them to `<stack>/build-lock.txt`, and passes their hash as
+`CACHE_BUST`:
+
+- any new upstream commit (even on an unchanged branch name in `apps.json`) → new hash →
+  `bench init` re-clones and rebuilds everything, so the image is always exactly the
+  branch HEADs at build time — same guarantee `--no-cache` used to give;
+- the OS / apt / Node / wkhtmltopdf / chromium layers stay cached (they only change
+  with the Containerfile or on `--full`);
+- nothing changed upstream → no-op build in seconds.
+
+`images/custom/Containerfile` also keeps uv/yarn/npm download caches in BuildKit cache
+mounts (so a rebuilt `bench init` doesn't re-download every wheel/npm package) and
+deletes every app's `node_modules` after `bench build` except `apps/frappe/node_modules`
+(the `websocket` service runs `apps/frappe/socketio.js` on it). Assets are already
+compiled, so the runtime never needs the rest — they were ~5 GB of the 12 GB vanilla image.
+
+Monthly (or after a Debian/Python security advisory) run `build.sh <stack> --full`
+(`--no-cache --pull`) so the base OS layers pick up apt security updates too.
 
 ```bash
 cd /home/frappe/frappe-docker-jsd
@@ -65,43 +92,41 @@ cd /home/frappe/frappe-docker-jsd
 # 1. Backup db + files
 docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id backup --with-files
 
-# 2. Rollback tag of the current image
-docker tag jsd-vanilla-erpnext:16-crmlms jsd-vanilla-erpnext:rollback-$(date +%Y%m%d)
+# 2. Build (tags the current image as :rollback-YYYYMMDD first, then rebuilds the
+#    stack's CUSTOM_IMAGE:CUSTOM_TAG from .env). Private git@ apps use
+#    ~/.ssh/jsd-custom-apps-deploy-key (override with SSH_KEY=...).
+deploy/jsd-server/build.sh vanilla          # add --full for the monthly base refresh
+#    TAG_OVERRIDE=<tag> builds under a throwaway tag instead (lock file not updated)
 
-# 3. Rebuild the same tag from latest branch HEADs (~5-10 min)
-docker build --no-cache \
-  --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
-  --build-arg=FRAPPE_BRANCH=version-16 \
-  --secret=id=apps_json,src=deploy/jsd-server/vanilla/apps.json \
-  --tag=jsd-vanilla-erpnext:16-crmlms \
-  --file=images/custom/Containerfile .
-
-# 4. Recreate the stack
+# 3. Recreate the stack
 docker compose -p jsd-vanilla \
   --env-file deploy/jsd-server/vanilla/.env \
   -f compose.yaml -f overrides/compose.proxy.yaml \
   -f deploy/jsd-server/compose.external-jsd.yaml up -d
 
-# 5. Migrate + install any newly added apps + verify
+# 4. Migrate + install any newly added apps + verify
 docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id migrate
 # only needed when apps.json gained new entries since the last build:
 # docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id install-app <app>
 docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id list-apps
+
+# 5. Commit <stack>/build-lock.txt — the record of exactly which commits are deployed
 ```
 
-For the custom/shop stacks substitute `jsd-custom`/`jsd-shop` and `custom/`/`shop/`
-paths accordingly.
+For the other stacks substitute `jsd-custom`/`jsd-shop`/`jsd-commera` and the stack
+name accordingly. The build happens while the old stack keeps serving; downtime is only
+step 3 + `migrate`.
 
-⚠️ Always check the real build exit code, not a pipe's — `docker build ... | tail`
+⚠️ Always check the real build exit code, not a pipe's — `build.sh ... | tail`
 reports `tail`'s exit code (0) even when the build itself failed. Redirect to a
-log file and check `$?` right after the `docker build` line, or run without a
-pipe.
+log file and check `$?`, or run without a pipe. (`build.sh` is `set -e`, and only
+writes `build-lock.txt` after a successful build.)
 
 ## Rollback
 
 ```bash
 docker tag jsd-vanilla-erpnext:rollback-YYYYMMDD jsd-vanilla-erpnext:16-crmlms
-# then re-run steps 4-5 above and restore the pre-migrate backup:
+# then re-run steps 3-4 above and restore the pre-migrate backup:
 docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id restore \
   /home/frappe/frappe-bench/sites/vanilla.whatthefrappe.id/private/backups/<backup>-database.sql.gz --with-files
 ```
@@ -113,6 +138,33 @@ docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id restore 
   start by `resources/core/main-entrypoint.sh`.
 - To add an app: edit that stack's `apps.json`, then run the update procedure
   (remember `install-app` for new apps — the image build only bakes them into the bench).
+- 2026-10-03: replaced the always-`--no-cache` rebuild with `build.sh` (upstream
+  commit SHAs via `git ls-remote` as `CACHE_BUST` + `build-lock.txt`), BuildKit cache
+  mounts for uv/yarn/npm, and `node_modules` cleanup in `images/custom/Containerfile`.
+  This fixes what the 2026-09-14 `sha256sum apps.json` attempt got wrong: the hash is
+  over resolved commits, not over branch names, so new upstream commits still force a
+  rebuild. Measured on `shop` (test tag, stack untouched): ~4 min `--no-cache` before →
+  148s first build (cold download cache) → 123s with a real `bench init` re-run and warm
+  cache → 0s build when nothing changed upstream; image 4.13 GB → 3.76 GB (vanilla, with
+  far more frontend apps, should drop by ~5 GB). Socketio + gunicorn smoke-tested on the
+  new image. Not yet deployed to any stack — the next real update on each stack is the
+  first one through `build.sh`. Next step if builds still need to be faster/off-host:
+  build in GitHub Actions and push to GHCR, server only pulls.
+- 2026-10-03: pinned `commera` from `develop` to tag `v16-beta.1` in `commera/apps.json`
+  (no `v16.0.0-beta.1` ref exists upstream; `v16-beta.1` is the only v16 release tag).
+  `bwh_payments`/`bwh_shipping` still track `develop`. Needs an image rebuild + `migrate`.
+- 2026-09-17: added `commera` stack (port 8094, redis db 7/8) —
+  [bwhtech/commera](https://github.com/bwhtech/commera) + its required companion apps
+  `bwh_payments`/`bwh_shipping`, on top of `erpnext` (version-16). Site created with
+  `--mariadb-user-host-login-scope='%'` from the start (see Gotcha below) and
+  `--db-root-username root --db-root-password <mariadb-prod root password>` (bench prompts
+  for the root password interactively otherwise — non-interactive `docker exec` has no tty
+  for that prompt). `commera`'s `after_install` hook throws (non-fatal, install still
+  completes) trying to create default email templates before any Company/Fiscal Year
+  exists — expected on a fresh site with no ERPNext setup wizard run yet; SETUP_GUIDE.md's
+  "Rebuilding a demo site from nothing" section runs the setup wizard before anything else
+  for this reason. No separate frontend stack: commera's storefront + dashboard build into
+  the app itself and are served by the stock `frontend` nginx service.
 - 2026-08-26: added `insights` (develop/v3), `lending` (version-16), `raven` (main);
   rollback image `jsd-vanilla-erpnext:rollback-20260826`.
 - 2026-09-14: added `shop` (erpnext + payments + webshop, port 8093), site
@@ -148,7 +200,8 @@ docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id restore 
   "nothing changed", so it would silently keep serving stale app code on any
   update that isn't a literal `apps.json` edit (e.g. active custom-app
   development, or just picking up upstream fixes). Not an acceptable tradeoff
-  here — back to always `--no-cache` on every real rebuild.
+  here — back to always `--no-cache` on every real rebuild. (Superseded 2026-10-03
+  by `build.sh`, which hashes resolved upstream commits instead.)
 
 ## Gotcha: DB user host must be `%`, not a container IP
 
