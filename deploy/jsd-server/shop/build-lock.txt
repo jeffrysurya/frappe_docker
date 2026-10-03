@@ -1,0 +1,5 @@
+https://github.com/frappe/frappe version-16 97a5dd93ca5883bcc9c4ef9834120c5cba397b67
+https://github.com/frappe/erpnext version-16 af63cde4941570ec7b9e12422c68302762cfcf91
+https://github.com/frappe/payments version-16 cca07d9f9392e2ea0e521c5975151db9e4b6c321
+https://github.com/frappe/webshop develop a1b22e1aacea2043e5d60b9d1200bf1d2f424763
+https://github.com/frappe/blog develop ed1ed4019c7f167c41b80f8ea92da60680c2112d

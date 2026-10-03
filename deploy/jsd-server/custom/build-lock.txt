@@ -1,0 +1,5 @@
+https://github.com/frappe/frappe version-16 97a5dd93ca5883bcc9c4ef9834120c5cba397b67
+https://github.com/frappe/erpnext version-16 af63cde4941570ec7b9e12422c68302762cfcf91
+https://github.com/frappe/hrms version-16 6f5ac249283f6fa1013fd5616f3d95f686ba7bb2
+git@github.com:MGM-CLUB/procurement.git main 83288284a7651875bcec9c64935c0c7e5a0dd799
+git@github.com:MGM-CLUB/HRMS.git main 66033ae79451d6ea43b97333c50b74fdf1759c5e

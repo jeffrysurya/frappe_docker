@@ -60,7 +60,12 @@ CACHE_BUST=$(sha256sum "$LOCK.tmp" | cut -c1-16)
 echo "== $STACK: $IMAGE:$TAG, CACHE_BUST=$CACHE_BUST"
 cat "$LOCK.tmp"
 
-if docker image inspect "$IMAGE:$TAG" >/dev/null 2>&1; then
+CURRENT_LOCK=$(docker image inspect -f '{{ index .Config.Labels "jsd.build-lock" }}' "$IMAGE:$TAG" 2>/dev/null || true)
+if [ -n "${TAG_OVERRIDE:-}" ]; then
+	echo "== TAG_OVERRIDE set, no rollback tag"
+elif [ "$CURRENT_LOCK" = "$CACHE_BUST" ] && [ "$MODE" != "--full" ]; then
+	echo "== $IMAGE:$TAG already built from these commits, no rollback tag"
+elif docker image inspect "$IMAGE:$TAG" >/dev/null 2>&1; then
 	# Never overwrite an existing rollback tag (e.g. a second build on the same day)
 	ROLLBACK=rollback-$(date +%Y%m%d)
 	n=2

@@ -92,7 +92,8 @@ cd /home/frappe/frappe-docker-jsd
 # 1. Backup db + files
 docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id backup --with-files
 
-# 2. Build (tags the current image as :rollback-YYYYMMDD first, then rebuilds the
+# 2. Build (tags the current image as :rollback-YYYYMMDD[-N] first — skipped for a
+#    no-op build or TAG_OVERRIDE — then rebuilds the
 #    stack's CUSTOM_IMAGE:CUSTOM_TAG from .env). Private git@ apps use
 #    ~/.ssh/jsd-custom-apps-deploy-key (override with SSH_KEY=...).
 deploy/jsd-server/build.sh vanilla          # add --full for the monthly base refresh
@@ -138,6 +139,23 @@ docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id restore 
   start by `resources/core/main-entrypoint.sh`.
 - To add an app: edit that stack's `apps.json`, then run the update procedure
   (remember `install-app` for new apps — the image build only bakes them into the bench).
+- 2026-10-03 (later): updated frappe 16.36.1 / erpnext 16.37.0 (version-16 HEAD) on
+  `commera` (was already built), `shop` and `custom` via `build.sh` + `migrate` — all
+  three healthy; `custom` jumped frappe 16.29→16.36.1, erpnext 16.30→16.37.0, hrms
+  16.15→16.20.1. Build times: commera 178s, custom 163s, shop 11s (same commits as the
+  earlier test build, so fully cached), vanilla 498s. Images: commera 5.49→3.86 GB.
+  Exact commits in each `<stack>/build-lock.txt`. Rollback images:
+  `jsd-{shop,custom}-erpnext:rollback-20261003`, `jsd-commera-erpnext:rollback-20261003-2`.
+- 2026-10-03: **vanilla update blocked by `insights`.** `insights` `develop` now
+  imports `@framework/ui/vite/island` via `"@framework/ui": "link:../../frappe/ui"`,
+  which only exists in frappe `develop` (v17), not `version-16` → `bench build` fails.
+  Switching `insights` to its release branch `version-3` (v3.14.2) builds fine, but this
+  site was installed from `develop`, so `migrate` then runs ~39 legacy v2 patches that
+  were never in its Patch Log and fails at `insights.patches.convert_duration_to_float`
+  (`TableMissingError: Insights Query`). Lesson: an app's install lineage (branch) can't
+  be switched freely — `develop` → release branch is effectively a downgrade. Pre-update
+  backup: `20261003_144343-vanilla_whatthefrappe_id-*`, previous image
+  `jsd-vanilla-erpnext:rollback-20261003`.
 - 2026-10-03: replaced the always-`--no-cache` rebuild with `build.sh` (upstream
   commit SHAs via `git ls-remote` as `CACHE_BUST` + `build-lock.txt`), BuildKit cache
   mounts for uv/yarn/npm, and `node_modules` cleanup in `images/custom/Containerfile`.
