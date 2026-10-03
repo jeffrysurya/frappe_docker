@@ -1,0 +1,12 @@
+services:
+  proxy:
+    command:
+      - --providers.docker
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.constraints=Label(`com.docker.compose.project`, `${COMPOSE_PROJECT_NAME}`)
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.underscoreHeadersStrategy=delete
+      - --api.dashboard=true
+      - --api.insecure=true
+    ports:
+      - "100.65.223.66:8888:8080"
