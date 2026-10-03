@@ -11,7 +11,7 @@
 # --full: --no-cache --pull, rebuilds everything incl. the base OS layers (monthly, for
 # Debian/apt security updates).
 #
-# Tags the current image as <image>:rollback-YYYYMMDD before building. Does not touch the
+# Tags the current image as <image>:rollback-YYYYMMDD[-N] before building. Does not touch the
 # running stack - recreate + migrate afterwards (see README.md).
 set -euo pipefail
 
@@ -61,8 +61,15 @@ echo "== $STACK: $IMAGE:$TAG, CACHE_BUST=$CACHE_BUST"
 cat "$LOCK.tmp"
 
 if docker image inspect "$IMAGE:$TAG" >/dev/null 2>&1; then
-	docker tag "$IMAGE:$TAG" "$IMAGE:rollback-$(date +%Y%m%d)"
-	echo "== tagged current image as $IMAGE:rollback-$(date +%Y%m%d)"
+	# Never overwrite an existing rollback tag (e.g. a second build on the same day)
+	ROLLBACK=rollback-$(date +%Y%m%d)
+	n=2
+	while docker image inspect "$IMAGE:$ROLLBACK" >/dev/null 2>&1; do
+		ROLLBACK=rollback-$(date +%Y%m%d)-$n
+		n=$((n + 1))
+	done
+	docker tag "$IMAGE:$TAG" "$IMAGE:$ROLLBACK"
+	echo "== tagged current image as $IMAGE:$ROLLBACK"
 fi
 
 EXTRA=()
