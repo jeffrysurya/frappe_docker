@@ -20,7 +20,7 @@ stack**, unlike the standalone `webshop-frontend` project used for `shop`. `comm
 `bwh_payments` ships its own Payment Gateway Profile / base class instead. Install/apps.json
 order matters here because of the `required_apps` chain: `erpnext` → `bwh_payments` (no
 deps) → `bwh_shipping` (needs `erpnext`) → `commera` (needs all three). `erpnext` tracks
-`version-16` and `commera` is pinned to its `v16-beta.1` release tag; `bwh_payments`/
+`version-16` and `commera` is pinned to its `v16.0.0-beta.2` release tag; `bwh_payments`/
 `bwh_shipping` only have `develop`/`main` upstream, so they track `develop` (same situation
 as `insights`/`telephony`/`wiki` in the `vanilla` stack); `commera`'s `pyproject.toml` pins
 `frappe>=16,<17` so this is a v16 deployment.
@@ -139,6 +139,14 @@ docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id restore 
   start by `resources/core/main-entrypoint.sh`.
 - To add an app: edit that stack's `apps.json`, then run the update procedure
   (remember `install-app` for new apps — the image build only bakes them into the bench).
+- 2026-10-04: upgraded `commera` `v16-beta.1` → `v16.0.0-beta.2` (70 commits: guest
+  checkout, email-code sign-in at checkout, settings tabs, dashboard apps switcher; one
+  new patch `allow_guest_on_order_detail`, same `required_apps`). Upstream now also has a
+  `version-16` branch (currently = `v16.0.0-beta.2`); kept the tag pin. frappe 16.36.1 /
+  erpnext 16.37.0 / `bwh_payments` / `bwh_shipping` `develop` had no new commits since
+  2026-10-03. Build 139s, `migrate` clean. Pre-update backup
+  `20261004_101214-commera_tataidekreatif_biz_id-*`, rollback image
+  `jsd-commera-erpnext:rollback-20261004`.
 - 2026-10-03 (later): updated frappe 16.36.1 / erpnext 16.37.0 (version-16 HEAD) on
   `commera` (was already built), `shop` and `custom` via `build.sh` + `migrate` — all
   three healthy; `custom` jumped frappe 16.29→16.36.1, erpnext 16.30→16.37.0, hrms

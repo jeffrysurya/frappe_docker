@@ -2,5 +2,5 @@
   { "url": "https://github.com/frappe/erpnext", "branch": "version-16" },
   { "url": "https://github.com/bwhtech/bwh_payments", "branch": "develop" },
   { "url": "https://github.com/bwhtech/bwh_shipping", "branch": "develop" },
-  { "url": "https://github.com/bwhtech/commera", "branch": "v16-beta.1" }
+  { "url": "https://github.com/bwhtech/commera", "branch": "v16.0.0-beta.2" }
 ]
