@@ -146,7 +146,9 @@ docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id restore 
   erpnext 16.37.0 / `bwh_payments` / `bwh_shipping` `develop` had no new commits since
   2026-10-03. Build 139s, `migrate` clean. Pre-update backup
   `20261004_101214-commera_tataidekreatif_biz_id-*`, rollback image
-  `jsd-commera-erpnext:rollback-20261004`.
+  `jsd-commera-erpnext:rollback-20261004`. Same day: wiped the site with `bench reinstall`
+  (all 5 apps reinstalled, setup wizard not yet run; pre-wipe backup
+  `20261004_101854-commera_tataidekreatif_biz_id-*`) — see the Gotcha below.
 - 2026-10-03 (later): updated frappe 16.36.1 / erpnext 16.37.0 (version-16 HEAD) on
   `commera` (was already built), `shop` and `custom` via `build.sh` + `migrate` — all
   three healthy; `custom` jumped frappe 16.29→16.36.1, erpnext 16.30→16.37.0, hrms
@@ -247,3 +249,18 @@ docker exec mariadb-prod mariadb -uroot -p'<root-password>' -e \
 
 Worth checking (`SELECT user,host FROM mysql.user;`) after creating *any* new site
 here, before the backend container ever gets recreated.
+
+**`bench reinstall` does it too** (it has no `--mariadb-user-host-login-scope` option).
+It leaves the old `'<db_user>'@'%'` account in place (same password from
+`site_config.json`, grants survive the dropped database) and *adds* a
+`'<db_user>'@'<container_ip>'` one, which MariaDB prefers because it's more specific —
+so `RENAME USER` fails with `ERROR 1396` (target exists). Just drop the IP-scoped one:
+
+```bash
+docker exec mariadb-prod mariadb -uroot -p'<root-password>' -e \
+  "DROP USER '<db_user>'@'<container_ip>'; FLUSH PRIVILEGES;"
+```
+
+Check which account the site actually logs in as with
+`bench --site <site> execute frappe.db.sql --args '["select current_user()"]'` — it
+should end in `@%`. (Hit on `commera` after its 2026-10-04 reinstall.)
