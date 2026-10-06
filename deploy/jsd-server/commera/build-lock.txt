@@ -3,3 +3,4 @@ https://github.com/frappe/erpnext version-16 af63cde4941570ec7b9e12422c68302762c
 https://github.com/bwhtech/bwh_payments develop c71cc44c3d1f54dc9f4ee011073cd698be08092c
 https://github.com/bwhtech/bwh_shipping develop 7f779e83d2baaf024ab7334bc5e88f1f3013ada3
 https://github.com/bwhtech/commera v16.0.0-beta.2 1a61e09c39bedd266ea401f1364f1d114c0b4420
+git@github.com:jeffrysurya/tata_payments.git master f2a6db29a1293035169fa7804b945c93200cd50f

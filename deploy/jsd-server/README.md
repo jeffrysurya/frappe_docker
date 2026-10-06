@@ -9,7 +9,7 @@ Four stacks on this host, all built from `images/custom/Containerfile` with thei
 | vanilla | `jsd-vanilla` | `jsd-vanilla-erpnext:16-crmlms` | `vanilla.whatthefrappe.id` (port 8091) | frappe, erpnext, hrms, payments, crm, lms, telephony, helpdesk, wiki, education, healthcare (marley), kamra, posawesome, insights, lending, raven |
 | custom  | `jsd-custom`  | `jsd-custom-erpnext:16`         | (see `custom/`) | |
 | shop | `jsd-shop` | `jsd-shop-erpnext:16` | `webshop.tataidekreatif.biz.id` (port 8093) | frappe, erpnext, payments, webshop, blog |
-| commera | `jsd-commera` | `jsd-commera-erpnext:16` | `commera.tataidekreatif.biz.id` (port 8094) | frappe, erpnext, bwh_payments, bwh_shipping, commera |
+| commera | `jsd-commera` | `jsd-commera-erpnext:16` | `commera.tataidekreatif.biz.id` (port 8094) | frappe, erpnext, bwh_payments, bwh_shipping, commera, tata_payments |
 
 `commera` ([bwhtech/commera](https://github.com/bwhtech/commera)) turns ERPNext into an
 online shop; its bilingual Jinja/Alpine/Tailwind storefront and Vue 3 merchant dashboard both
@@ -139,6 +139,7 @@ docker exec jsd-vanilla-backend-1 bench --site vanilla.whatthefrappe.id restore 
   start by `resources/core/main-entrypoint.sh`.
 - To add an app: edit that stack's `apps.json`, then run the update procedure
   (remember `install-app` for new apps — the image build only bakes them into the bench).
+- 2026-10-06: added private app `tata_payments` ([jeffrysurya/tata_payments](https://github.com/jeffrysurya/tata_payments), branch `master`, requires `bwh_payments`) to `commera`, cloned over SSH with the deploy key; built, migrated and `install-app`ed on `commera.tataidekreatif.biz.id` (pre-migrate backup `20261006_084454-*`).
 - 2026-10-04: upgraded `commera` `v16-beta.1` → `v16.0.0-beta.2` (70 commits: guest
   checkout, email-code sign-in at checkout, settings tabs, dashboard apps switcher; one
   new patch `allow_guest_on_order_detail`, same `required_apps`). Upstream now also has a
