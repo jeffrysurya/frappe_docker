@@ -1,0 +1,16 @@
+https://github.com/frappe/frappe version-16 97a5dd93ca5883bcc9c4ef9834120c5cba397b67
+https://github.com/frappe/erpnext version-16 af63cde4941570ec7b9e12422c68302762cfcf91
+https://github.com/frappe/hrms version-16 6f5ac249283f6fa1013fd5616f3d95f686ba7bb2
+https://github.com/frappe/payments version-16 cca07d9f9392e2ea0e521c5975151db9e4b6c321
+https://github.com/frappe/crm main deedce73c1eb48577e7f70e95df6bac1dc55c93f
+https://github.com/frappe/lms main 7c46bb8f4976222b3f6aa84368551c424edaa194
+https://github.com/frappe/telephony develop 039cf39f245d6818ead03cf94eea6ce7f9c1e1f7
+https://github.com/frappe/helpdesk main 1c3361cc0019deec6f84035a9352270b4e4eb5cb
+https://github.com/frappe/wiki develop b515afcb2eed16b809b754a56aa12361db565744
+https://github.com/frappe/education version-16 22e0910d8b4188f17b76e58d7b434354ce5a0e58
+https://github.com/earthians/marley version-16 dda107b26e3a0fe1dbd65c7257371235de054a04
+https://github.com/Kamra-PMS/kamra-pms main 96e42ef190260d09a783e9b4f72fd71f50c8151b
+https://github.com/WaleedAboHashima/POSAWESOME-16 version-16 2ae40dd718859124dc779e8ce567b4fd08b4b706
+https://github.com/frappe/insights version-3 5447f1621c0e6593994286807fe2521e03f1b0b4
+https://github.com/frappe/lending version-16 97f692e908e92b3ce6737ab08c3ff9cb3cdcca44
+https://github.com/frappe/raven main e890308e967fdc6510d88b9f16cb1dbda321b1ea

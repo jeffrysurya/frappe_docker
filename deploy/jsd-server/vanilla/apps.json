@@ -11,7 +11,7 @@
   { "url": "https://github.com/earthians/marley", "branch": "version-16" },
   { "url": "https://github.com/Kamra-PMS/kamra-pms", "branch": "main" },
   { "url": "https://github.com/WaleedAboHashima/POSAWESOME-16", "branch": "version-16" },
-  { "url": "https://github.com/frappe/insights", "branch": "develop" },
+  { "url": "https://github.com/frappe/insights", "branch": "version-3" },
   { "url": "https://github.com/frappe/lending", "branch": "version-16" },
   { "url": "https://github.com/frappe/raven", "branch": "main" }
 ]

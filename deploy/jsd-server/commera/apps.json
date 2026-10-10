@@ -2,6 +2,6 @@
   { "url": "https://github.com/frappe/erpnext", "branch": "version-16" },
   { "url": "https://github.com/bwhtech/bwh_payments", "branch": "develop" },
   { "url": "https://github.com/bwhtech/bwh_shipping", "branch": "develop" },
-  { "url": "https://github.com/bwhtech/commera", "branch": "v16.0.0-beta.2" },
+  { "url": "git@github.com:jeffrysurya/commera.git", "branch": "fix/demo-company-currency" },
   { "url": "git@github.com:jeffrysurya/tata_payments.git", "branch": "master" }
 ]
