@@ -1,6 +1,7 @@
 https://github.com/frappe/frappe version-16 6b450a166e076dd842e4db7ea0843f62881e62ac
 https://github.com/frappe/erpnext version-16 7474d9e786277383de1242ab882f16856d17a9c9
 https://github.com/bwhtech/bwh_payments develop c71cc44c3d1f54dc9f4ee011073cd698be08092c
-https://github.com/bwhtech/bwh_shipping develop 7f779e83d2baaf024ab7334bc5e88f1f3013ada3
-git@github.com:jeffrysurya/commera.git fix/demo-company-currency 12374e2f0d4d3770c3f37d2d15de3dc5ac7255d7
+https://github.com/bwhtech/bwh_shipping develop 936713680dffe3fb476a40611c3b2a732caa1b18
+git@github.com:jeffrysurya/commera.git version-16-enhanchment 797b754bf0d8c5fc5fa99206f96567560d3920aa
+git@github.com:jeffrysurya/tata_shipping.git master 19a637b77028ccf918f6033f00c36068eacbaa5a
 git@github.com:jeffrysurya/tata_payments.git master f2a6db29a1293035169fa7804b945c93200cd50f
